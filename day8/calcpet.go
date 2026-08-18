@@ -26,6 +26,8 @@ func main() {
 			delenie := dele(num1, num2)
 			story[i-1] = delenie
 			fmt.Println(delenie)
+		default:
+			fmt.Println("Неизвестная операция!")
 		}
 		fmt.Println("еще?(1-да, 0-нет)")
 		fmt.Scan(&otvet)
