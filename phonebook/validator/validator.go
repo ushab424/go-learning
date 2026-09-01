@@ -14,7 +14,7 @@ func IsValidEmail(email string) bool { // проверка email на валид
 }
 func IsValidPhone(phone string) bool { // проверка телефона на валидность
 	nums := []rune(phone)                 // переводим строку в руны
-	if len(nums) < 10 && len(nums) > 12 { // если оба верны возвращаем false
+	if len(nums) < 10 || len(nums) > 12 { // если оба верны возвращаем false
 		return false
 	}
 	for _, r := range nums { // крутим руны
