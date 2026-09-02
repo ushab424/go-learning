@@ -54,6 +54,7 @@ func ShowMenu(contacts *[]*contact.Contact, filename string) { // функция
 			idNum, err := strconv.Atoi(id) // переводим id в int
 			if err != nil {                // проверка на ошибку перевода в int
 				fmt.Println("error:", err)
+				continue
 			}
 			found := false                // создаем флаг
 			for i, r := range *contacts { // крутим список контактов
@@ -92,12 +93,13 @@ func ShowMenu(contacts *[]*contact.Contact, filename string) { // функция
 			id, err := strconv.Atoi(idContact) // переводим строку в int
 			if err != nil {                    // проверка перевода на ошибку
 				fmt.Println(err)
+				continue
 			}
 			found := false                // создаем флаг
 			for _, r := range *contacts { // крутим контакты
 				if r.ID == id { // поиск совпадения ID
-					found = true                                       // меняем значение флага
-					fmt.Println("Select the line you want to change:") // запрашиваем строку для изменения
+					found = true                                                                // меняем значение флага
+					fmt.Println("Select the line you want to change (Name;Phone;Email;Group):") // запрашиваем строку для изменения
 					scanner.Scan()
 					line := scanner.Text()
 					switch line { // выбираем строку для изменения
@@ -151,16 +153,16 @@ func ShowMenu(contacts *[]*contact.Contact, filename string) { // функция
 			}
 			fmt.Printf("All contacts: %d\n", len(*contacts)) // общее количество контактов
 			for i, val := range stat {                       // крутим мапу
-				fmt.Printf("Group: %s. | Quat: %d", i, val) // выводим группу и количество контактов
+				fmt.Printf("Group: %s. | Quat: %d\n", i, val) // выводим группу и количество контактов
 			}
 		case "8":
 			file, err := os.Create("ContactList.csv") //создаем файл .csv
 			if err != nil {                           // проверяем на ошибку создания файла
 				fmt.Println("error:", err)
 			}
-			defer file.Close()                             // закрываем файл обязательно!!!
-			fmt.Fprintf(file, "ID,Name,Phone,Email,Group") // пишем заголовки в файле
-			for _, r := range *contacts {                  // крутим контакты
+			defer file.Close()                               // закрываем файл обязательно!!!
+			fmt.Fprintf(file, "ID,Name,Phone,Email,Group\n") // пишем заголовки в файле
+			for _, r := range *contacts {                    // крутим контакты
 				fmt.Fprintf(file, "%d,%s,%s,%s,%s\n", r.ID, r.Name, r.Phone, r.Email, r.Group) // печатаем данные в каждой строке по каждому контакту
 			}
 			fmt.Println("Export done!") // выводим уведомление о завершении экспорта
