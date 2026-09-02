@@ -6,6 +6,7 @@ import (
 	"os"
 	"phonebook/contact"
 	"phonebook/validator"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -13,9 +14,9 @@ import (
 func ShowMenu(contacts *[]*contact.Contact, filename string) { // функция использования меню и всех функций приложения
 	scanner := bufio.NewScanner(os.Stdin) // активируем сканер
 	for {                                 // бесконечный цикл
-		fmt.Println("1-Добавить 2-удалить 3-показать все 4-поиск 5-редактировать контакт 6-фильтрация по группе 7-выход") // варианты использования
-		scanner.Scan()                                                                                                    // сканируем ответ
-		choice := scanner.Text()                                                                                          // читаем ответ и используем функции
+		fmt.Println("1-Добавить 2-удалить 3-показать все 4-поиск 5-редактировать контакт 6-фильтрация по группе 7-статистика по группам 8-эксопорт в .csv 9-сортировка 10-выход") // варианты использования
+		scanner.Scan()                                                                                                                                                            // сканируем ответ
+		choice := scanner.Text()                                                                                                                                                  // читаем ответ и используем функции
 		switch choice {
 		case "1": // добавление контакта
 			fmt.Println("Name:") // поочереди просим ввести данные и сканируем их
@@ -54,17 +55,26 @@ func ShowMenu(contacts *[]*contact.Contact, filename string) { // функция
 			if err != nil {                // проверка на ошибку перевода в int
 				fmt.Println("error:", err)
 			}
+			found := false                // создаем флаг
 			for i, r := range *contacts { // крутим список контактов
 				if r.ID == idNum { // сверяем сходство
+					found = true                                              // меняем значение флага
 					*contacts = append((*contacts)[:i], (*contacts)[i+1:]...) // склеиваем строку без этого контакта
 					fmt.Println("Contact delete")
 					break // выходим из цикла
 				}
 			}
+			if !found { // если контакт не найден
+				fmt.Println("Contact not found.") // печатаем ошибку
+			}
 		case "3": // вывод всех контактов
 			fmt.Println("Показать все")
-			for _, cont := range *contacts { // крутим список
-				fmt.Printf("ID: %d | Name: %s | PhoneNum: %s | Email: %s | Group: %s\n", cont.ID, cont.Name, cont.Phone, cont.Email, cont.Group) // и форматированно выводим всех
+			if len(*contacts) == 0 { // если контакты отстутсвуют
+				fmt.Println("0 contacts")
+			} else {
+				for _, r := range *contacts { // крутим список
+					fmt.Println(r) // и форматированно выводим всех
+				}
 			}
 		case "4": // поиск по строке
 			fmt.Println("Enter string:")
@@ -72,7 +82,7 @@ func ShowMenu(contacts *[]*contact.Contact, filename string) { // функция
 			searchstring := scanner.Text() // присваиваем введеное слова переменной
 			for _, r := range *contacts {  // крутим контакты
 				if strings.Contains(r.Name, searchstring) || strings.Contains(r.Phone, searchstring) || strings.Contains(r.Email, searchstring) || strings.Contains(r.Group, searchstring) {
-					fmt.Printf("ID: %d | Name: %s | Phone: %s | Email: %s | Group: %s\n", r.ID, r.Name, r.Phone, r.Email, r.Group) // если хоть одна строка свопадает, форматированно выводим
+					fmt.Println(r) // если хоть одна строка свопадает, форматированно выводим
 				}
 			}
 		case "5": // редактирование контакта
@@ -83,8 +93,10 @@ func ShowMenu(contacts *[]*contact.Contact, filename string) { // функция
 			if err != nil {                    // проверка перевода на ошибку
 				fmt.Println(err)
 			}
+			found := false                // создаем флаг
 			for _, r := range *contacts { // крутим контакты
 				if r.ID == id { // поиск совпадения ID
+					found = true                                       // меняем значение флага
 					fmt.Println("Select the line you want to change:") // запрашиваем строку для изменения
 					scanner.Scan()
 					line := scanner.Text()
@@ -120,6 +132,9 @@ func ShowMenu(contacts *[]*contact.Contact, filename string) { // функция
 					}
 				}
 			}
+			if !found { //если ID не найден
+				fmt.Println("ID not found!")
+			}
 		case "6": // фильтрация контактов по группе
 			fmt.Println("Select group:") // запрашиваем группу
 			scanner.Scan()
@@ -129,7 +144,44 @@ func ShowMenu(contacts *[]*contact.Contact, filename string) { // функция
 					fmt.Println(r.ID, r.Name, r.Phone, r.Email, r.Group) // печатаем контакт
 				}
 			}
-		case "7":
+		case "7": // функция статистики по группам
+			stat := make(map[string]int)   // создаем мапу где каждый ключ это группа
+			for _, gr := range *contacts { // крутим контакты и добавляем в мапу
+				stat[gr.Group]++
+			}
+			fmt.Printf("All contacts: %d\n", len(*contacts)) // общее количество контактов
+			for i, val := range stat {                       // крутим мапу
+				fmt.Printf("Group: %s. | Quat: %d", i, val) // выводим группу и количество контактов
+			}
+		case "8":
+			file, err := os.Create("ContactList.csv") //создаем файл .csv
+			if err != nil {                           // проверяем на ошибку создания файла
+				fmt.Println("error:", err)
+			}
+			defer file.Close()                             // закрываем файл обязательно!!!
+			fmt.Fprintf(file, "ID,Name,Phone,Email,Group") // пишем заголовки в файле
+			for _, r := range *contacts {                  // крутим контакты
+				fmt.Fprintf(file, "%d,%s,%s,%s,%s\n", r.ID, r.Name, r.Phone, r.Email, r.Group) // печатаем данные в каждой строке по каждому контакту
+			}
+			fmt.Println("Export done!") // выводим уведомление о завершении экспорта
+		case "9": // функция сортировки по имени или ID
+			fmt.Println("Select a sorting option: 1 – by name, 2 – by ID:") // запрашиваем вид сортировки
+			scanner.Scan()
+			variat := scanner.Text()
+			switch variat {
+			case "1": // сортировка по имени
+				sort.Slice(*contacts, func(i, j int) bool { // сортируем слайс и возвращаем true/false
+					return (*contacts)[i].Name < (*contacts)[j].Name
+				})
+			case "2": // сортировка по ID
+				sort.Slice(*contacts, func(i, j int) bool { // сортируем слайс и возвращаем true/false
+					return (*contacts)[i].ID < (*contacts)[j].ID
+				})
+			}
+			for _, r := range *contacts { // крутим отсортированный слайс и возвращаем его
+				fmt.Println(r)
+			}
+		case "10":
 			fmt.Println("Выход")
 			return // выход из бесконечного цикла меню
 		}
@@ -141,10 +193,6 @@ func ShowMenu(contacts *[]*contact.Contact, filename string) { // функция
 
 /*
 План на завтра:
-1.Статистика — кейс "8": сколько всего контактов, сколько в каждой группе
-2.Экспорт в CSV(или JSON, спросить у гпт) — кейс "9": сохранить контакты в формате CSV
-3.Сортировка — кейс "10": показать контакты отсортированные по имени или по ID
-4.Добавить интерфейс Stringer для Contact — метод String() string
 5.Обработка ошибок везде — если файл не найден, если ID не существует при удалении,
 если слайс пустой при показе
 */
