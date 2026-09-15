@@ -1,0 +1,18 @@
+[
+ {
+  "id": 1,
+  "total": 1000,
+  "customer": {
+   "name": "Ivan",
+   "email": "IvanKoehler@gmail.com"
+  }
+ },
+ {
+  "id": 2,
+  "total": 2000,
+  "customer": {
+   "name": "Boris",
+   "email": "BorisJohnson@mail.com"
+  }
+ }
+]
